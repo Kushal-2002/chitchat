@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Real-Time Chat</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <ul id="messages"></ul>
+    <form id="form" action="">
+      <!-- Add input field for username -->
+      <input
+        id="username"
+        type="text"
+        placeholder="Enter your username"
+        autocomplete="off"
+        required
+      />
+      <input
+        id="input"
+        type="text"
+        placeholder="Type your message"
+        autocomplete="off"
+        required
+      />
+      <button>Send</button>
+    </form>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+
+      // DOM elements
+      const form = document.querySelector("#form");
+      const input = document.querySelector("#input");
+      const usernameInput = document.querySelector("#username"); // New
+      const messages = document.querySelector("#messages");
+
+      // Function to display messages
+      function addMessageToUI(msg) {
+        const item = document.createElement("li");
+        item.textContent = msg.username + ": " + msg.message;
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+      }
+
+      // Handle form submit
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const username = usernameInput.value.trim(); // Get username
+        const message = input.value.trim(); // Get message
+        if (username && message) {
+          // Check if both username and message are provided
+          socket.emit("chat message", { username, message }); // Send username and message to server
+          input.value = ""; // Clear input field
+        }
+      });
+
+      // Handle received messages
+      socket.on("chat message", (msg) => {
+        addMessageToUI(msg);
+      });
+
+      // Handle receiving previous messages
+      socket.on("previous messages", (msgs) => {
+        console.log(msgs);
+        msgs.reverse().forEach((msg) => {
+          addMessageToUI(msg);
+        });
+      });
+    </script>
+  </body>
+</html>
